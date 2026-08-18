@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Travel Business CRM — Manage leads, hotels, guides, and payments for your travel agency.">
+  <title>TravelDesk — Travel Business CRM</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i data-lucide="plane" style="width:22px;height:22px"></i></div>
+      <div>
+        <h1>TravelDesk</h1>
+        <span class="brand-sub">Business CRM</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-label">Main</span>
+      <a href="#" class="nav-item active" data-page="dashboard">
+        <i data-lucide="layout-dashboard"></i> Dashboard
+      </a>
+      <a href="#" class="nav-item" data-page="leads">
+        <i data-lucide="users"></i> Leads
+        <span class="badge" id="nav-leads-badge">0</span>
+      </a>
+
+      <span class="nav-label">Partners</span>
+      <a href="#" class="nav-item" data-page="b2b">
+        <i data-lucide="briefcase"></i> B2B Partners
+      </a>
+      <a href="#" class="nav-item" data-page="hotels">
+        <i data-lucide="building-2"></i> Hotels
+      </a>
+      <a href="#" class="nav-item" data-page="guides">
+        <i data-lucide="compass"></i> Guides
+      </a>
+
+      <span class="nav-label">Finance</span>
+      <a href="#" class="nav-item" data-page="payments">
+        <i data-lucide="indian-rupee"></i> Payments
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="export-btn" id="btn-export">
+        <i data-lucide="download" style="width:16px;height:16px"></i> Export Backup
+      </button>
+      <button class="import-btn" id="btn-import">
+        <i data-lucide="upload" style="width:16px;height:16px"></i> Import Data
+      </button>
+      <input type="file" id="import-file-input" accept=".json" style="display:none">
+    </div>
+  </aside>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-left">
+      <button class="mobile-toggle" id="mobile-toggle"><i data-lucide="menu" style="width:22px;height:22px"></i></button>
+      <h2 class="header-title" id="header-title">Dashboard</h2>
+    </div>
+    <div class="header-right">
+      <div class="search-box">
+        <i data-lucide="search"></i>
+        <input type="text" id="global-search" placeholder="Search across data…">
+      </div>
+      <span class="header-date" id="header-date"></span>
+    </div>
+  </header>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- ========== DASHBOARD ========== -->
+    <section class="page-section active" id="page-dashboard">
+      <div class="section-header">
+        <div><h2>Overview</h2><p>Your travel business at a glance</p></div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card primary">
+          <div class="stat-icon"><i data-lucide="trending-up" style="width:22px;height:22px"></i></div>
+          <div class="stat-value" id="stat-active-leads">0</div>
+          <div class="stat-label">Active Leads</div>
+        </div>
+        <div class="stat-card emerald">
+          <div class="stat-icon"><i data-lucide="trophy" style="width:22px;height:22px"></i></div>
+          <div class="stat-value" id="stat-won-leads">0</div>
+          <div class="stat-label">Won Leads</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon"><i data-lucide="indian-rupee" style="width:22px;height:22px"></i></div>
+          <div class="stat-value" id="stat-collected">₹0</div>
+          <div class="stat-label">Collected</div>
+        </div>
+        <div class="stat-card coral">
+          <div class="stat-icon"><i data-lucide="clock" style="width:22px;height:22px"></i></div>
+          <div class="stat-value" id="stat-pending">₹0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card violet">
+          <div class="stat-icon"><i data-lucide="building-2" style="width:22px;height:22px"></i></div>
+          <div class="stat-value" id="stat-hotels">0</div>
+          <div class="stat-label">Hotel Partners</div>
+        </div>
+        <div class="stat-card sky">
+          <div class="stat-icon"><i data-lucide="compass" style="width:22px;height:22px"></i></div>
+          <div class="stat-value" id="stat-guides">0</div>
+          <div class="stat-label">Guides Available</div>
+        </div>
+        <div class="stat-card violet">
+          <div class="stat-icon"><i data-lucide="briefcase" style="width:22px;height:22px"></i></div>
+          <div class="stat-value" id="stat-b2b-partners">0</div>
+          <div class="stat-label">B2B Partners</div>
+        </div>
+        <div class="stat-card coral">
+          <div class="stat-icon"><i data-lucide="alert-circle" style="width:22px;height:22px"></i></div>
+          <div class="stat-value" id="stat-b2b-pending">₹0</div>
+          <div class="stat-label">B2B Pending</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Lead Pipeline</h3>
+          <div style="height:280px"><canvas id="chart-pipeline"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Payment Overview</h3>
+          <div style="height:280px"><canvas id="chart-payments"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== LEADS ========== -->
+    <section class="page-section" id="page-leads">
+      <div class="section-header">
+        <div><h2>Leads <span style="color:var(--text-muted);font-weight:400;font-size:1rem" id="leads-count">0</span></h2><p>Manage your customer inquiries</p></div>
+        <button class="btn btn-primary" onclick="Leads.openModal()"><i data-lucide="plus" style="width:16px;height:16px"></i> Add Lead</button>
+      </div>
+
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-filters">
+            <select class="filter-select" id="lead-status-filter">
+              <option value="All">All Status</option>
+              <option value="New">New</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Proposal">Proposal</option>
+              <option value="Ongoing">Ongoing</option>
+              <option value="Won">Won</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th><th>Phone</th><th>Destination</th><th>Travel Date</th><th>Pax</th><th>Budget</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leads-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== HOTELS ========== -->
+    <section class="page-section" id="page-hotels">
+      <div class="section-header">
+        <div><h2>Hotels <span style="color:var(--text-muted);font-weight:400;font-size:1rem" id="hotels-count">0</span></h2><p>Your partner hotels and resorts</p></div>
+        <button class="btn btn-primary" onclick="Hotels.openModal()"><i data-lucide="plus" style="width:16px;height:16px"></i> Add Hotel</button>
+      </div>
+
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-filters">
+            <select class="filter-select" id="hotel-city-filter">
+              <option value="All">All Cities</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Hotel Name</th><th>City</th><th>Contact</th><th>Room Type</th><th>Rate/Night</th><th>Rating</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="hotels-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== GUIDES ========== -->
+    <section class="page-section" id="page-guides">
+      <div class="section-header">
+        <div><h2>Guides <span style="color:var(--text-muted);font-weight:400;font-size:1rem" id="guides-count">0</span></h2><p>Tour guides and specialists</p></div>
+        <button class="btn btn-primary" onclick="Guides.openModal()"><i data-lucide="plus" style="width:16px;height:16px"></i> Add Guide</button>
+      </div>
+
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-filters">
+            <select class="filter-select" id="guide-status-filter">
+              <option value="All">All Status</option>
+              <option value="Available">Available</option>
+              <option value="On Trip">On Trip</option>
+              <option value="Leave">Leave</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th><th>Phone</th><th>Languages</th><th>Specialization</th><th>Rate/Day</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="guides-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PAYMENTS ========== -->
+    <section class="page-section" id="page-payments">
+      <div class="section-header">
+        <div><h2>Payments <span style="color:var(--text-muted);font-weight:400;font-size:1rem" id="payments-count">0</span></h2><p>Track advance payments and balances</p></div>
+        <button class="btn btn-success" onclick="Payments.openModal()"><i data-lucide="plus" style="width:16px;height:16px"></i> Record Payment</button>
+      </div>
+
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="table-filters">
+            <select class="filter-select" id="payment-status-filter">
+              <option value="All">All Status</option>
+              <option value="Fully Paid">Fully Paid</option>
+              <option value="Partially Paid">Partially Paid</option>
+              <option value="Unpaid">Unpaid</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Customer</th><th>Package Cost</th><th>Advance Paid</th><th>Balance</th><th>Progress</th><th>Status</th><th>Method</th><th>Date</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="payments-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== B2B TRAVEL PARTNERS & BILLING ========== -->
+    <section class="page-section" id="page-b2b">
+      <div class="section-header">
+        <div>
+          <h2>B2B Partners <span style="color:var(--text-muted);font-weight:400;font-size:1rem" id="b2b-partners-count">0</span></h2>
+          <p>Manage sub-agents, agency leads, bills, and pending balances</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost" onclick="B2B.openBillModal()"><i data-lucide="receipt" style="width:16px;height:16px"></i> Create Bill</button>
+          <button class="btn btn-primary" onclick="B2B.openPartnerModal()"><i data-lucide="plus" style="width:16px;height:16px"></i> Add B2B Partner</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card violet">
+          <div class="stat-icon"><i data-lucide="briefcase" style="width:22px;height:22px"></i></div>
+          <div class="stat-value" id="b2b-stat-leads">0</div>
+          <div class="stat-label">B2B Leads Provided</div>
+        </div>
+        <div class="stat-card primary">
+          <div class="stat-icon"><i data-lucide="file-text" style="width:22px;height:22px"></i></div>
+          <div class="stat-value" id="b2b-stat-billed">₹0</div>
+          <div class="stat-label">Total B2B Billed</div>
+        </div>
+        <div class="stat-card coral">
+          <div class="stat-icon"><i data-lucide="alert-circle" style="width:22px;height:22px"></i></div>
+          <div class="stat-value" id="b2b-stat-pending">₹0</div>
+          <div class="stat-label">B2B Pending Balance</div>
+        </div>
+      </div>
+
+      <!-- B2B Navigation Tabs -->
+      <div class="b2b-tabs" style="display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border-color);padding-bottom:12px;overflow-x:auto">
+        <button class="btn btn-ghost b2b-tab-btn active" data-tab="partners" onclick="B2B.switchTab('partners')"><i data-lucide="users" style="width:15px;height:15px"></i> Partners Directory</button>
+        <button class="btn btn-ghost b2b-tab-btn" data-tab="bills" onclick="B2B.switchTab('bills')"><i data-lucide="receipt" style="width:15px;height:15px"></i> Bills & Invoices</button>
+        <button class="btn btn-ghost b2b-tab-btn" data-tab="leads" onclick="B2B.switchTab('leads')"><i data-lucide="user-check" style="width:15px;height:15px"></i> B2B Leads</button>
+      </div>
+
+      <!-- Tab 1: Partners Directory -->
+      <div class="b2b-tab-content" id="b2b-tab-partners">
+        <div class="table-container">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Agency Name & City</th><th>Contact Person</th><th>Leads Given</th><th>Comm. %</th><th>Total Billed</th><th>Total Paid</th><th>Pending Balance</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="b2b-partners-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Bills & Invoices -->
+      <div class="b2b-tab-content" id="b2b-tab-bills" style="display:none">
+        <div class="table-container">
+          <div class="table-toolbar">
+            <div class="table-filters">
+              <select class="filter-select" id="b2b-bill-filter">
+                <option value="All">All Status</option>
+                <option value="Unpaid">Unpaid</option>
+                <option value="Partially Paid">Partially Paid</option>
+                <option value="Fully Paid">Fully Paid</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Invoice #</th><th>B2B Partner</th><th>Bill Date</th><th>Due Date</th><th>Total Bill</th><th>Amount Paid</th><th>Pending Amount</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="b2b-bills-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: B2B Leads -->
+      <div class="b2b-tab-content" id="b2b-tab-leads" style="display:none">
+        <div class="table-container">
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Customer Name</th><th>Phone</th><th>B2B Partner Source</th><th>Destination</th><th>Travel Date</th><th>Budget</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="b2b-leads-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Lead Modal -->
+<div class="modal-overlay" id="lead-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="lead-modal-title">Add New Lead</h3>
+      <button class="modal-close"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <form id="lead-form">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="leadName">Full Name *</label>
+            <input type="text" id="leadName" name="leadName" required placeholder="e.g. Rahul Sharma">
+          </div>
+          <div class="form-group">
+            <label for="leadPhone">Phone *</label>
+            <input type="tel" id="leadPhone" name="leadPhone" required placeholder="e.g. 9876543210">
+          </div>
+          <div class="form-group">
+            <label for="leadEmail">Email</label>
+            <input type="email" id="leadEmail" name="leadEmail" placeholder="e.g. rahul@email.com">
+          </div>
+          <div class="form-group">
+            <label for="leadDestination">Destination</label>
+            <input type="text" id="leadDestination" name="leadDestination" placeholder="e.g. Manali, Goa">
+          </div>
+          <div class="form-group">
+            <label for="leadTravelDate">Travel Date</label>
+            <input type="date" id="leadTravelDate" name="leadTravelDate">
+          </div>
+          <div class="form-group">
+            <label for="leadPassengers">Passengers</label>
+            <input type="number" id="leadPassengers" name="leadPassengers" min="1" placeholder="e.g. 4">
+          </div>
+          <div class="form-group">
+            <label for="leadBudget">Budget (₹)</label>
+            <input type="number" id="leadBudget" name="leadBudget" min="0" placeholder="e.g. 50000">
+          </div>
+          <div class="form-group">
+            <label for="leadStatus">Status</label>
+            <select id="leadStatus" name="leadStatus">
+              <option value="New">New</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Proposal">Proposal Sent</option>
+              <option value="Ongoing">Ongoing</option>
+              <option value="Won">Won</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="leadB2bPartner">B2B Travel Partner (Source)</label>
+            <select id="leadB2bPartner" name="leadB2bPartner">
+              <option value="">Direct Customer (No B2B Partner)</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="leadNotes">Notes</label>
+            <textarea id="leadNotes" name="leadNotes" placeholder="Any special requirements…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost modal-close">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Lead</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Hotel Modal -->
+<div class="modal-overlay" id="hotel-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="hotel-modal-title">Add New Hotel</h3>
+      <button class="modal-close"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <form id="hotel-form">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="hotelName">Hotel Name *</label>
+            <input type="text" id="hotelName" name="hotelName" required placeholder="e.g. Mountain View Resort">
+          </div>
+          <div class="form-group">
+            <label for="hotelCity">City *</label>
+            <input type="text" id="hotelCity" name="hotelCity" required placeholder="e.g. Manali">
+          </div>
+          <div class="form-group">
+            <label for="hotelContact">Contact Number</label>
+            <input type="tel" id="hotelContact" name="hotelContact" placeholder="e.g. 01902-252525">
+          </div>
+          <div class="form-group">
+            <label for="hotelRoomType">Room Type</label>
+            <input type="text" id="hotelRoomType" name="hotelRoomType" placeholder="e.g. Deluxe, Suite">
+          </div>
+          <div class="form-group">
+            <label for="hotelRate">Rate/Night (₹)</label>
+            <input type="number" id="hotelRate" name="hotelRate" min="0" placeholder="e.g. 3500">
+          </div>
+          <div class="form-group">
+            <label for="hotelRating">Rating (1–5)</label>
+            <select id="hotelRating" name="hotelRating">
+              <option value="5">★★★★★ (5)</option>
+              <option value="4">★★★★ (4)</option>
+              <option value="3" selected>★★★ (3)</option>
+              <option value="2">★★ (2)</option>
+              <option value="1">★ (1)</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="hotelNotes">Notes</label>
+            <textarea id="hotelNotes" name="hotelNotes" placeholder="Special amenities, agreements…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost modal-close">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Hotel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Guide Modal -->
+<div class="modal-overlay" id="guide-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="guide-modal-title">Add New Guide</h3>
+      <button class="modal-close"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <form id="guide-form">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="guideName">Guide Name *</label>
+            <input type="text" id="guideName" name="guideName" required placeholder="e.g. Ravi Kumar">
+          </div>
+          <div class="form-group">
+            <label for="guidePhone">Phone *</label>
+            <input type="tel" id="guidePhone" name="guidePhone" required placeholder="e.g. 9988776601">
+          </div>
+          <div class="form-group">
+            <label for="guideLanguages">Languages</label>
+            <input type="text" id="guideLanguages" name="guideLanguages" placeholder="e.g. Hindi, English">
+          </div>
+          <div class="form-group">
+            <label for="guideSpecialization">Specialization</label>
+            <input type="text" id="guideSpecialization" name="guideSpecialization" placeholder="e.g. Trekking, Cultural">
+          </div>
+          <div class="form-group">
+            <label for="guideRate">Rate/Day (₹)</label>
+            <input type="number" id="guideRate" name="guideRate" min="0" placeholder="e.g. 1500">
+          </div>
+          <div class="form-group">
+            <label for="guideStatus">Status</label>
+            <select id="guideStatus" name="guideStatus">
+              <option value="Available">Available</option>
+              <option value="On Trip">On Trip</option>
+              <option value="Leave">Leave</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost modal-close">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Guide</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="payment-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="payment-modal-title">Record Payment</h3>
+      <button class="modal-close"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <form id="payment-form">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="paymentLead">Customer (Lead) *</label>
+            <select id="paymentLead" name="paymentLead" required>
+              <option value="">-- Select Lead --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="paymentPackageCost">Package Cost (₹)</label>
+            <input type="number" id="paymentPackageCost" name="paymentPackageCost" min="0" placeholder="e.g. 55000">
+          </div>
+          <div class="form-group">
+            <label for="paymentAdvance">Advance Paid (₹)</label>
+            <input type="number" id="paymentAdvance" name="paymentAdvance" min="0" placeholder="e.g. 25000">
+          </div>
+          <div class="form-group">
+            <label>Balance Due</label>
+            <div style="padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-color);background:var(--bg-input);color:var(--accent-coral-light);font-weight:700;font-size:1.05rem" id="payment-balance-display">₹0</div>
+          </div>
+          <div class="form-group">
+            <label for="paymentMethod">Payment Method</label>
+            <select id="paymentMethod" name="paymentMethod">
+              <option value="Cash">Cash</option>
+              <option value="UPI">UPI</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Cheque">Cheque</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="paymentDate">Payment Date</label>
+            <input type="date" id="paymentDate" name="paymentDate">
+          </div>
+          <div class="form-group full-width">
+            <label for="paymentNotes">Notes</label>
+            <textarea id="paymentNotes" name="paymentNotes" placeholder="e.g. Balance due before travel date…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost modal-close">Cancel</button>
+        <button type="submit" class="btn btn-success">Save Payment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- B2B Partner Modal -->
+<div class="modal-overlay" id="b2b-partner-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="b2b-partner-modal-title">Add New B2B Partner</h3>
+      <button class="modal-close"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <form id="b2b-partner-form">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="b2bAgencyName">Agency Name *</label>
+            <input type="text" id="b2bAgencyName" name="b2bAgencyName" required placeholder="e.g. Apex Travel Solutions">
+          </div>
+          <div class="form-group">
+            <label for="b2bContactPerson">Contact Person *</label>
+            <input type="text" id="b2bContactPerson" name="b2bContactPerson" required placeholder="e.g. Vikram Malhotra">
+          </div>
+          <div class="form-group">
+            <label for="b2bPhone">Phone *</label>
+            <input type="tel" id="b2bPhone" name="b2bPhone" required placeholder="e.g. 9811223344">
+          </div>
+          <div class="form-group">
+            <label for="b2bEmail">Email</label>
+            <input type="email" id="b2bEmail" name="b2bEmail" placeholder="e.g. info@apextravel.com">
+          </div>
+          <div class="form-group">
+            <label for="b2bCity">City</label>
+            <input type="text" id="b2bCity" name="b2bCity" placeholder="e.g. Delhi, Mumbai">
+          </div>
+          <div class="form-group">
+            <label for="b2bCommission">Commission Rate (%)</label>
+            <input type="number" id="b2bCommission" name="b2bCommission" min="0" max="100" placeholder="e.g. 10">
+          </div>
+          <div class="form-group full-width">
+            <label for="b2bNotes">Notes & Agreements</label>
+            <textarea id="b2bNotes" name="b2bNotes" placeholder="Special terms, agent contract details…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost modal-close">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Partner</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- B2B Bill Modal -->
+<div class="modal-overlay" id="b2b-bill-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="b2b-bill-modal-title">Create B2B Bill / Invoice</h3>
+      <button class="modal-close"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+    </div>
+    <form id="b2b-bill-form">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="b2bBillPartner">B2B Travel Partner *</label>
+            <select id="b2b-bill-partner" name="b2bBillPartner" required>
+              <option value="">-- Select B2B Partner --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="b2bBillInvoiceNo">Invoice / Bill # *</label>
+            <input type="text" id="b2bBillInvoiceNo" name="b2bBillInvoiceNo" required placeholder="e.g. INV-B2B-101">
+          </div>
+          <div class="form-group">
+            <label for="b2bBillDate">Bill Date</label>
+            <input type="date" id="b2bBillDate" name="b2bBillDate">
+          </div>
+          <div class="form-group">
+            <label for="b2bBillDueDate">Due Date</label>
+            <input type="date" id="b2bBillDueDate" name="b2bBillDueDate">
+          </div>
+          <div class="form-group">
+            <label for="b2bBillTotal">Total Bill Amount (₹) *</label>
+            <input type="number" id="b2bBillTotal" name="b2bBillTotal" min="0" required placeholder="e.g. 55000">
+          </div>
+          <div class="form-group">
+            <label for="b2bBillPaid">Amount Paid (₹)</label>
+            <input type="number" id="b2bBillPaid" name="b2bBillPaid" min="0" placeholder="e.g. 20000">
+          </div>
+          <div class="form-group">
+            <label>Calculated Pending Amount</label>
+            <div style="padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-color);background:var(--bg-input);color:var(--accent-coral-light);font-weight:700;font-size:1.05rem" id="b2b-bill-pending-display">₹0</div>
+          </div>
+          <div class="form-group full-width">
+            <label for="b2bBillNotes">Notes / Description</label>
+            <textarea id="b2bBillNotes" name="b2bBillNotes" placeholder="Bill breakdown, package description, payment terms…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost modal-close">Cancel</button>
+        <button type="submit" class="btn btn-success">Save B2B Bill</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Invoice Modal -->
+<div class="modal-overlay" id="invoice-modal">
+  <div class="modal">
+    <div class="invoice-actions-bar">
+      <div style="display:flex;gap:10px;align-items:center">
+        <h3 style="font-size:1.05rem;font-weight:700;margin:0;color:var(--text-primary)"><i data-lucide="file-text" style="width:18px;height:18px;vertical-align:middle;margin-right:6px"></i> Invoice Preview</h3>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="Invoice.printInvoice()"><i data-lucide="printer" style="width:16px;height:16px"></i> Print</button>
+        <button class="btn btn-ghost" onclick="Invoice.shareWhatsApp()"><i data-lucide="message-square" style="width:16px;height:16px"></i> WhatsApp</button>
+        <button class="btn btn-ghost" onclick="Invoice.shareEmail()"><i data-lucide="mail" style="width:16px;height:16px"></i> Email</button>
+        <button class="btn btn-primary" onclick="Invoice.downloadPDF()"><i data-lucide="download" style="width:16px;height:16px"></i> Download PDF</button>
+        <button class="btn btn-danger modal-close" style="width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center"><i data-lucide="x" style="width:18px;height:18px"></i></button>
+      </div>
+    </div>
+    <div class="invoice-paper-wrapper">
+      <div class="invoice-paper" id="invoice-paper">
+        <!-- Rendered dynamically by invoice.js -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <h4>Delete Confirmation</h4>
+    <p>Are you sure you want to delete <strong id="confirm-item-name"></strong>? This action cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirm-no">Cancel</button>
+      <button class="btn btn-danger" id="confirm-yes">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Scripts (order matters) -->
+<script src="src/storage.js"></script>
+<script src="src/dashboard.js"></script>
+<script src="src/leads.js"></script>
+<script src="src/hotels.js"></script>
+<script src="src/guides.js"></script>
+<script src="src/payments.js"></script>
+<script src="src/b2b.js"></script>
+<script src="src/invoice.js"></script>
+<script src="src/app.js"></script>
+
+</body>
+</html>
